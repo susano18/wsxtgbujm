@@ -1,0 +1,13 @@
+# Smart Attendance System
+*.pyc
+__pycache__/
+*.db
+.env
+.venv/
+venv/
+logs/
+exports/
+instance/
+*.egg-info/
+dist/
+build/

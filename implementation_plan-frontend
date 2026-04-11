@@ -1,0 +1,67 @@
+# Implementation Plan — Smart Attendance System Frontend
+
+Design and develop a premium, animated frontend for the Smart Attendance System, integrating with the existing Flask backend.
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Hosting & Integration**: I will create the frontend in a `frontend/` directory. For deployment, I recommend hosting the frontend on Netlify (for speed and modern features) and the Flask backend separately (or as Netlify functions if we refactor). For local development, they will run on different ports (3000 and 5000), and I'll configure a proxy or CORS.
+
+> [!NOTE]
+> **Face Recognition**: The "Attendance Marking" interface will use `react-webcam` to capture frames and send them to the `/attendance/mark` endpoint in real-time or on-demand.
+
+## Proposed Changes
+
+### Frontend Infrastructure
+- **Framework**: Next.js 14+ (App Router) with TypeScript.
+- **Styling**: Tailwind CSS + Shadcn UI primitives for a premium feel.
+- **Animations**: Framer Motion for page transitions and micro-interactions.
+- **Data Viz**: Recharts for dashboard analytics.
+
+---
+
+### Key Components
+
+#### [NEW] [frontend/](file:///c:/Users/Sujal/Desktop/VS%20code/wsxtgbujm/frontend)
+Initialize the Next.js project.
+
+#### [NEW] [Layout & Sidebar](file:///c:/Users/Sujal/Desktop/VS%20code/wsxtgbujm/frontend/components/layout)
+- Animated sidebar with glassmorphism effects.
+- Responsive mobile hamburger menu.
+
+#### [NEW] [Login/Landing Page](file:///c:/Users/Sujal/Desktop/VS%20code/wsxtgbujm/frontend/app/page.tsx)
+- Hero section with gradient text and particle background.
+- Glassmorphism login card with validation animations.
+
+#### [NEW] [Admin Dashboard](file:///c:/Users/Sujal/Desktop/VS%20code/wsxtgbujm/frontend/app/dashboard/page.tsx)
+- Real-time statistics cards with count-up animations.
+- Interactive charts showing attendance trends.
+
+#### [NEW] [Student Registration](file:///c:/Users/Sujal/Desktop/VS%20code/wsxtgbujm/frontend/app/students/register/page.tsx)
+- Multi-step form with progress indicator.
+- Integrated camera preview for face enrollment.
+
+#### [NEW] [Attendance Marking](file:///c:/Users/Sujal/Desktop/VS%20code/wsxtgbujm/frontend/app/attendance/mark/page.tsx)
+- Live camera feed with overlay for face detection feedback.
+- Toast notifications for success/failure.
+
+#### [NEW] [Reports & Filtering](file:///c:/Users/Sujal/Desktop/VS%20code/wsxtgbujm/frontend/app/reports/page.tsx)
+- Animated data table with sorting and searching.
+- Export functionality (Excel, CSV, PDF).
+
+## Open Questions
+
+- **Authentication**: Should I implement a "Viewer" role or is it strictly for Admins?
+- **Camera Feed**: Do you want live face scanning (auto-mark) or a button-trigger capture?
+- **PWA**: Should I prioritize PWA features (offline access) in the initial version?
+
+## Verification Plan
+
+### Automated Tests
+- Build verification: `npm run build` to ensure no TypeScript or CSS errors.
+- Lighthouse Audit: Check performance and accessibility scores.
+
+### Manual Verification
+- Testing responsiveness on various viewport sizes using the browser tool.
+- Verifying the end-to-end flow: Login -> Register Student -> Mark Attendance -> View Report.
+- Checking all animations for smoothness.
