@@ -78,7 +78,7 @@ def mark_attendance_from_image(image_data, camera_id="cam_0"):
 
             # Check duplicate attendance for today
             existing = AttendanceRecord.query.filter_by(
-                student_id=matched_student.id, date=today
+                student_db_id=matched_student.id, date=today
             ).first()
 
             if existing:
@@ -96,7 +96,7 @@ def mark_attendance_from_image(image_data, camera_id="cam_0"):
 
             # Create attendance record
             record = AttendanceRecord(
-                student_id=matched_student.id,
+                student_db_id=matched_student.id,
                 date=today,
                 time_in=now,
                 status=status,
@@ -188,7 +188,7 @@ def get_student_attendance(db_id, date_from=None, date_to=None):
     if not student:
         return False, {"error": "Student not found."}, 404
 
-    query = AttendanceRecord.query.filter_by(student_id=db_id)
+    query = AttendanceRecord.query.filter_by(student_db_id=db_id)
     if date_from:
         query = query.filter(AttendanceRecord.date >= date_from)
     if date_to:

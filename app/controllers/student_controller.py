@@ -210,3 +210,47 @@ def list_students(page=1, per_page=20, search=None, active_only=True):
         "pages": pagination.pages,
         "per_page": per_page,
     }, 200
+
+
+def bulk_register_students(csv_file):
+    """Register multiple students from a CSV file."""
+    try:
+        import pandas as pd
+        df = pd.read_csv(csv_file)
+
+        required_cols = ["student_id", "name", "email"]
+        for col in required_cols:
+            if col not in df.columns:
+                return False, {"error": f"CSV must contain {col} column."}, 400
+
+        success_count = 0
+        errors = []
+
+        for idx, row in df.iterrows():
+            data = {
+                "student_id": str(row["student_id"]),
+                "name": str(row["name"]),
+                "email": str(row["email"]),
+                "department": str(row.get("department", "")),
+                "year": row.get("year")
+            }
+
+            # Simple check for existing to avoid complete failure
+            if Student.query.filter_by(student_id=data["student_id"]).first():
+                errors.append(f"Row {idx+2}: Student ID {data['student_id']} already exists.")
+                continue
+
+            success, result, status = register_student(data)
+            if success:
+                success_count += 1
+            else:
+                errors.append(f"Row {idx+2}: {result.get('error') or result.get('errors')}")
+
+        return True, {
+            "message": f"Successfully registered {success_count} students.",
+            "success_count": success_count,
+            "errors": errors
+        }, 201
+    except Exception as e:
+        logger.error("Bulk registration failed: %s", str(e))
+        return False, {"error": f"Bulk registration failed: {str(e)}"}, 500

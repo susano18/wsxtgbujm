@@ -95,3 +95,21 @@ def add_face_encoding(student_db_id):
 
     success, result, status = ctrl.add_face_encoding(student_db_id, photo_file)
     return jsonify(result), status
+
+
+@students_bp.route("/bulk", methods=["POST"])
+@admin_required
+def bulk_register_students():
+    """
+    Register multiple students from a CSV file.
+    File: file (required CSV file)
+    """
+    if "file" not in request.files:
+        return jsonify({"error": "No file uploaded."}), 400
+
+    csv_file = request.files["file"]
+    if not csv_file.filename.endswith(".csv"):
+        return jsonify({"error": "Only CSV files are allowed."}), 400
+
+    success, result, status = ctrl.bulk_register_students(csv_file)
+    return jsonify(result), status

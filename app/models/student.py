@@ -6,6 +6,7 @@ Stores student information and their face encoding data.
 import json
 from datetime import datetime, timezone
 
+import bcrypt
 from app.models.database import db
 
 
@@ -21,6 +22,7 @@ class Student(db.Model):
     department = db.Column(db.String(100), nullable=True)
     year = db.Column(db.Integer, nullable=True)
     photo_path = db.Column(db.String(500), nullable=True)
+    password_hash = db.Column(db.String(255), nullable=True)
     face_encodings = db.Column(db.Text, nullable=True)  # JSON-serialized list of encodings
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
@@ -32,7 +34,8 @@ class Student(db.Model):
 
     # Relationships
     attendance_records = db.relationship(
-        "AttendanceRecord", backref="student", lazy="dynamic", cascade="all, delete-orphan"
+        "AttendanceRecord", backref="student", lazy="dynamic", cascade="all, delete-orphan",
+        foreign_keys="AttendanceRecord.student_db_id"
     )
 
     def set_encodings(self, encodings_list):
@@ -52,6 +55,20 @@ class Student(db.Model):
         new_enc = encoding.tolist() if hasattr(encoding, "tolist") else encoding
         current.append(new_enc)
         self.face_encodings = json.dumps(current)
+
+    def set_password(self, password):
+        """Hash and store the password."""
+        self.password_hash = bcrypt.hashpw(
+            password.encode("utf-8"), bcrypt.gensalt()
+        ).decode("utf-8")
+
+    def check_password(self, password):
+        """Verify a password against the stored hash."""
+        if not self.password_hash:
+            return False
+        return bcrypt.checkpw(
+            password.encode("utf-8"), self.password_hash.encode("utf-8")
+        )
 
     def to_dict(self, include_encodings=False):
         """Serialize student to dictionary."""

@@ -4,6 +4,7 @@ Core face detection and recognition logic using the face_recognition library.
 """
 
 import logging
+import threading
 import numpy as np
 import face_recognition
 from flask import current_app
@@ -13,6 +14,13 @@ logger = logging.getLogger(__name__)
 
 class FaceService:
     """Handles face detection, encoding, and comparison."""
+
+    _cache = {
+        "known_encodings": [],
+        "encoding_to_student": [],
+        "last_updated": 0
+    }
+    _cache_lock = threading.Lock()
 
     @staticmethod
     def detect_faces(image):
@@ -152,3 +160,40 @@ class FaceService:
             return False, "Could not generate face encoding.", None
 
         return True, "Face validated successfully.", encodings[0]
+
+    @classmethod
+    def get_known_faces(cls):
+        """Get known faces, using cache if available and fresh."""
+        from app.models.student import Student
+        import time
+
+        with cls._cache_lock:
+            # Refresh cache if empty or older than 5 minutes
+            if not cls._cache["known_encodings"] or (time.time() - cls._cache["last_updated"] > 300):
+                logger.info("Refreshing face encoding cache...")
+                students = Student.query.filter(
+                    Student.is_active == True,
+                    Student.face_encodings.isnot(None),
+                ).all()
+
+                known_encodings = []
+                encoding_to_student = []
+                for student in students:
+                    for enc in student.get_encodings():
+                        known_encodings.append(enc)
+                        encoding_to_student.append(student)
+
+                cls._cache["known_encodings"] = known_encodings
+                cls._cache["encoding_to_student"] = encoding_to_student
+                cls._cache["last_updated"] = time.time()
+
+            return cls._cache["known_encodings"], cls._cache["encoding_to_student"]
+
+    @classmethod
+    def clear_cache(cls):
+        """Clear the face encoding cache."""
+        with cls._cache_lock:
+            cls._cache["known_encodings"] = []
+            cls._cache["encoding_to_student"] = []
+            cls._cache["last_updated"] = 0
+            logger.info("Face encoding cache cleared.")
