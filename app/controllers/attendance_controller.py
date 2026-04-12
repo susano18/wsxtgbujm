@@ -48,22 +48,11 @@ def mark_attendance_from_image(image_data, camera_id="cam_0"):
 
     face_encodings = FaceService.encode_faces(rgb_image, face_locations)
 
-    # Load all active students with face encodings
-    students = Student.query.filter(
-        Student.is_active == True,
-        Student.face_encodings.isnot(None),
-    ).all()
+    # Load known faces from cache
+    known_encodings, encoding_to_student = FaceService.get_known_faces()
 
-    if not students:
+    if not known_encodings:
         return False, {"error": "No registered students with face data found."}, 404
-
-    # Build a flat list of known encodings mapped to students
-    known_encodings = []
-    encoding_to_student = []
-    for student in students:
-        for enc in student.get_encodings():
-            known_encodings.append(enc)
-            encoding_to_student.append(student)
 
     # Match each detected face
     results = []

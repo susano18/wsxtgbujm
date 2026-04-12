@@ -84,7 +84,12 @@ export default function StudentRegistration() {
       setCurrentStep(3); // Success step
       toast.success('Student registered successfully!');
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to register student.');
+      const errorData = error.response?.data;
+      if (errorData?.errors && Array.isArray(errorData.errors)) {
+        errorData.errors.forEach((err: string) => toast.error(err));
+      } else {
+        toast.error(errorData?.error || 'Failed to register student.');
+      }
     } finally {
       setIsSubmitting(false);
     }

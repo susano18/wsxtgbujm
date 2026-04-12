@@ -95,11 +95,13 @@ class FaceService:
 
             # Compute face distances
             distances = face_recognition.face_distance(known_np, unknown_np)
-            distances_list = distances.tolist()
+            distances_list = [float(d) for d in distances]
 
             # Find best match
             best_idx = int(np.argmin(distances))
-            best_distance = distances[best_idx]
+            best_distance = float(distances[best_idx])
+
+            logger.debug("Face comparison: best_distance=%.4f, tolerance=%.4f", best_distance, tolerance)
 
             if best_distance <= tolerance:
                 # Convert distance to confidence (0-1 scale, 1 = perfect match)
@@ -107,7 +109,7 @@ class FaceService:
                 return {
                     "match": True,
                     "index": best_idx,
-                    "confidence": round(confidence, 4),
+                    "confidence": round(float(confidence), 4),
                     "distance": round(best_distance, 4),
                     "distances": [round(d, 4) for d in distances_list],
                 }
@@ -134,9 +136,15 @@ class FaceService:
         """
         try:
             image = face_recognition.load_image_file(image_path)
+            if image is None:
+                logger.error("Could not load image file: %s", image_path)
+                return []
+
             encodings = face_recognition.face_encodings(image)
             if not encodings:
                 logger.warning("No faces found in image: %s", image_path)
+            else:
+                logger.info("Successfully generated %d encoding(s) from %s", len(encodings), image_path)
             return encodings
         except Exception as e:
             logger.error("Failed to encode from file %s: %s", image_path, str(e))

@@ -86,6 +86,7 @@ def register_student(data, photo_file=None):
 
     db.session.add(student)
     db.session.commit()
+    FaceService.clear_cache()
     logger.info("Student registered: %s (%s)", name, student_id)
 
     return True, student.to_dict(), 201
@@ -117,6 +118,7 @@ def update_student(db_id, data):
         student.is_active = bool(data["is_active"])
 
     db.session.commit()
+    FaceService.clear_cache()
     logger.info("Student updated: %s", student.student_id)
     return True, student.to_dict(), 200
 
@@ -135,6 +137,7 @@ def delete_student(db_id):
     name = student.name
     db.session.delete(student)
     db.session.commit()
+    FaceService.clear_cache()
     logger.info("Student deleted: %s", name)
     return True, {"message": f"Student '{name}' deleted successfully."}, 200
 
@@ -166,6 +169,7 @@ def add_face_encoding(db_id, photo_file):
 
     student.add_encoding(encoding)
     db.session.commit()
+    FaceService.clear_cache()
 
     count = len(student.get_encodings())
     logger.info("Added face encoding #%d for student %s", count, student.student_id)
@@ -245,6 +249,9 @@ def bulk_register_students(csv_file):
                 success_count += 1
             else:
                 errors.append(f"Row {idx+2}: {result.get('error') or result.get('errors')}")
+
+        if success_count > 0:
+            FaceService.clear_cache()
 
         return True, {
             "message": f"Successfully registered {success_count} students.",
