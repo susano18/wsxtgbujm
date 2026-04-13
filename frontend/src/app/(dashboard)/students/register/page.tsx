@@ -9,7 +9,8 @@ import {
   CheckCircle, 
   ArrowRight, 
   ArrowLeft,
-  Loader2
+  Loader2,
+  Upload
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -83,7 +84,12 @@ export default function StudentRegistration() {
       setCurrentStep(3); // Success step
       toast.success('Student registered successfully!');
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to register student.');
+      const errorData = error.response?.data;
+      if (errorData?.errors && Array.isArray(errorData.errors)) {
+        errorData.errors.forEach((err: string) => toast.error(err));
+      } else {
+        toast.error(errorData?.error || 'Failed to register student.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -127,6 +133,32 @@ export default function StudentRegistration() {
 
       {/* Form Content */}
       <Card className="glass min-h-[500px] flex flex-col p-8 md:p-12">
+        <div className="flex justify-end mb-6">
+           <Button variant="outline" size="sm" onClick={() => {
+              const input = document.createElement('input');
+              input.type = 'file';
+              input.accept = '.csv';
+              input.onchange = async (e: any) => {
+                 const file = e.target.files[0];
+                 if (file) {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    try {
+                       toast.loading('Importing students...');
+                       const res = await api.post('/students/bulk', formData);
+                       toast.dismiss();
+                       toast.success(res.data.message);
+                    } catch (err: any) {
+                       toast.dismiss();
+                       toast.error(err.response?.data?.error || 'Bulk import failed');
+                    }
+                 }
+              };
+              input.click();
+           }}>
+              <Upload className="mr-2 h-4 w-4" /> Bulk Import (CSV)
+           </Button>
+        </div>
         <AnimatePresence mode="wait">
           <motion.div
             key={currentStep}
