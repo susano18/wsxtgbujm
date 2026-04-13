@@ -1,0 +1,18 @@
+[2026-04-13 02:38:37,537] INFO in logger: Logger initialized — log file: /app/logs/attendance_system.log
+[2026-04-13 02:38:37] INFO in logger (setup_logger:45): Logger initialized — log file: /app/logs/attendance_system.log
+[2026-04-13 02:38:38,344] INFO in __init__: Default admin user created.
+[2026-04-13 02:38:38] INFO in __init__ (_seed_admin:81): Default admin user created.
+[2026-04-13 02:38:38,345] INFO in __init__: Smart Attendance System initialized successfully.
+[2026-04-13 02:38:38] INFO in __init__ (create_app:64): Smart Attendance System initialized successfully.
+ * Serving Flask app 'app'
+ * Debug mode: on
+[2026-04-13 02:38:39,282] INFO in logger: Logger initialized — log file: /app/logs/attendance_system.log
+[2026-04-13 02:38:39] INFO in logger (setup_logger:45): Logger initialized — log file: /app/logs/attendance_system.log
+[2026-04-13 02:38:39,931] INFO in __init__: Smart Attendance System initialized successfully.
+[2026-04-13 02:38:39] INFO in __init__ (create_app:64): Smart Attendance System initialized successfully.
+ * Debugger is active!
+[2026-04-13 02:49:02,184] INFO in logger: Logger initialized — log file: /app/logs/attendance_system.log
+[2026-04-13 02:49:02] INFO in logger (setup_logger:45): Logger initialized — log file: /app/logs/attendance_system.log
+[2026-04-13 02:49:02,678] INFO in __init__: Smart Attendance System initialized successfully.
+[2026-04-13 02:49:02] INFO in __init__ (create_app:64): Smart Attendance System initialized successfully.
+ * Debugger is active!
