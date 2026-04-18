@@ -9,12 +9,14 @@ from flask import Blueprint, request, jsonify
 
 from app.models.database import db
 from app.models.user import User
-from app.utils.auth import generate_token, token_required, admin_required
+from app.models.student import Student
+from app.utils.auth import generate_token, token_required, admin_required, rate_limit
 
 auth_bp = Blueprint("auth", __name__)
 
 
 @auth_bp.route("/login", methods=["POST"])
+@rate_limit(limit=5, period=60)
 def login():
     """
     Authenticate user and return a JWT token.
@@ -87,6 +89,40 @@ def change_password():
     db.session.commit()
 
     return jsonify({"message": "Password changed successfully."}), 200
+
+
+@auth_bp.route("/student/login", methods=["POST"])
+@rate_limit(limit=5, period=60)
+def student_login():
+    """
+    Authenticate student and return a JWT token.
+    ---
+    Body: { "student_id": "STU123", "password": "..." }
+    """
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Request body is required."}), 400
+
+    student_id = data.get("student_id", "").strip()
+    password = data.get("password", "")
+
+    if not student_id or not password:
+        return jsonify({"error": "Student ID and password are required."}), 400
+
+    student = Student.query.filter_by(student_id=student_id).first()
+    if student is None or not student.check_password(password):
+        return jsonify({"error": "Invalid student ID or password."}), 401
+
+    if not student.is_active:
+        return jsonify({"error": "Student account is deactivated."}), 403
+
+    token = generate_token(student)
+
+    return jsonify({
+        "message": "Login successful.",
+        "token": token,
+        "user": student.to_dict(),
+    }), 200
 
 
 @auth_bp.route("/register", methods=["POST"])

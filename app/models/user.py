@@ -32,9 +32,15 @@ class User(db.Model):
 
     def check_password(self, password):
         """Verify a password against the stored hash."""
-        return bcrypt.checkpw(
-            password.encode("utf-8"), self.password_hash.encode("utf-8")
-        )
+        if not self.password_hash:
+            return False
+        try:
+            return bcrypt.checkpw(
+                password.encode("utf-8"), self.password_hash.encode("utf-8")
+            )
+        except ValueError:
+            # Handle invalid hash format
+            return False
 
     def to_dict(self):
         """Serialize user (never expose password)."""

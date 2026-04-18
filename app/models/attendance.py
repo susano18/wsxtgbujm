@@ -14,7 +14,7 @@ class AttendanceRecord(db.Model):
     __tablename__ = "attendance_records"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    student_id = db.Column(
+    student_db_id = db.Column(
         db.Integer, db.ForeignKey("students.id", ondelete="CASCADE"), nullable=False, index=True
     )
     date = db.Column(db.Date, nullable=False, default=lambda: date.today(), index=True)
@@ -30,14 +30,14 @@ class AttendanceRecord(db.Model):
 
     # Composite unique constraint: one attendance per student per day
     __table_args__ = (
-        db.UniqueConstraint("student_id", "date", name="uq_student_date"),
+        db.UniqueConstraint("student_db_id", "date", name="uq_student_date"),
     )
 
     def to_dict(self):
         """Serialize record to dictionary."""
         return {
             "id": self.id,
-            "student_id": self.student_id,
+            "student_db_id": self.student_db_id,
             "student_name": self.student.name if self.student else None,
             "student_code": self.student.student_id if self.student else None,
             "date": self.date.isoformat() if self.date else None,
@@ -51,4 +51,4 @@ class AttendanceRecord(db.Model):
         }
 
     def __repr__(self):
-        return f"<Attendance {self.student_id} on {self.date} - {self.status}>"
+        return f"<Attendance {self.student_db_id} on {self.date} - {self.status}>"

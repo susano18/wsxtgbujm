@@ -4,6 +4,7 @@ Starts the Flask server with the configured environment.
 """
 
 from app import create_app
+import os
 
 app = create_app()
 

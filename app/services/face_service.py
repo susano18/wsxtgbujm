@@ -4,6 +4,7 @@ Core face detection and recognition logic using the face_recognition library.
 """
 
 import logging
+import threading
 import numpy as np
 import face_recognition
 from flask import current_app
@@ -13,6 +14,13 @@ logger = logging.getLogger(__name__)
 
 class FaceService:
     """Handles face detection, encoding, and comparison."""
+
+    _cache = {
+        "known_encodings": [],
+        "encoding_to_student": [],
+        "last_updated": 0
+    }
+    _cache_lock = threading.Lock()
 
     @staticmethod
     def detect_faces(image):
@@ -87,11 +95,13 @@ class FaceService:
 
             # Compute face distances
             distances = face_recognition.face_distance(known_np, unknown_np)
-            distances_list = distances.tolist()
+            distances_list = [float(d) for d in distances]
 
             # Find best match
             best_idx = int(np.argmin(distances))
-            best_distance = distances[best_idx]
+            best_distance = float(distances[best_idx])
+
+            logger.debug("Face comparison: best_distance=%.4f, tolerance=%.4f", best_distance, tolerance)
 
             if best_distance <= tolerance:
                 # Convert distance to confidence (0-1 scale, 1 = perfect match)
@@ -99,7 +109,7 @@ class FaceService:
                 return {
                     "match": True,
                     "index": best_idx,
-                    "confidence": round(confidence, 4),
+                    "confidence": round(float(confidence), 4),
                     "distance": round(best_distance, 4),
                     "distances": [round(d, 4) for d in distances_list],
                 }
@@ -126,9 +136,15 @@ class FaceService:
         """
         try:
             image = face_recognition.load_image_file(image_path)
+            if image is None:
+                logger.error("Could not load image file: %s", image_path)
+                return []
+
             encodings = face_recognition.face_encodings(image)
             if not encodings:
                 logger.warning("No faces found in image: %s", image_path)
+            else:
+                logger.info("Successfully generated %d encoding(s) from %s", len(encodings), image_path)
             return encodings
         except Exception as e:
             logger.error("Failed to encode from file %s: %s", image_path, str(e))
@@ -152,3 +168,40 @@ class FaceService:
             return False, "Could not generate face encoding.", None
 
         return True, "Face validated successfully.", encodings[0]
+
+    @classmethod
+    def get_known_faces(cls):
+        """Get known faces, using cache if available and fresh."""
+        from app.models.student import Student
+        import time
+
+        with cls._cache_lock:
+            # Refresh cache if empty or older than 5 minutes
+            if not cls._cache["known_encodings"] or (time.time() - cls._cache["last_updated"] > 300):
+                logger.info("Refreshing face encoding cache...")
+                students = Student.query.filter(
+                    Student.is_active == True,
+                    Student.face_encodings.isnot(None),
+                ).all()
+
+                known_encodings = []
+                encoding_to_student = []
+                for student in students:
+                    for enc in student.get_encodings():
+                        known_encodings.append(enc)
+                        encoding_to_student.append(student)
+
+                cls._cache["known_encodings"] = known_encodings
+                cls._cache["encoding_to_student"] = encoding_to_student
+                cls._cache["last_updated"] = time.time()
+
+            return cls._cache["known_encodings"], cls._cache["encoding_to_student"]
+
+    @classmethod
+    def clear_cache(cls):
+        """Clear the face encoding cache."""
+        with cls._cache_lock:
+            cls._cache["known_encodings"] = []
+            cls._cache["encoding_to_student"] = []
+            cls._cache["last_updated"] = 0
+            logger.info("Face encoding cache cleared.")

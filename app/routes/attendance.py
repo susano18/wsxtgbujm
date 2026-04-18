@@ -8,7 +8,7 @@ from datetime import date, datetime
 from flask import Blueprint, request, jsonify, send_file, Response
 import io
 
-from app.utils.auth import token_required, admin_required
+from app.utils.auth import token_required, admin_required, rate_limit
 from app.controllers import attendance_controller as att_ctrl
 from app.controllers import export_controller as exp_ctrl
 
@@ -17,6 +17,7 @@ attendance_bp = Blueprint("attendance", __name__)
 
 @attendance_bp.route("/mark", methods=["POST"])
 @token_required
+@rate_limit(limit=10, period=60)
 def mark_attendance():
     """
     Mark attendance via image upload.

@@ -128,15 +128,15 @@ def student_stats(student_db_id):
 
     # Overall counts
     total_present = AttendanceRecord.query.filter_by(
-        student_id=student_db_id, status="present"
+        student_db_id=student_db_id, status="present"
     ).count()
     total_late = AttendanceRecord.query.filter_by(
-        student_id=student_db_id, status="late"
+        student_db_id=student_db_id, status="late"
     ).count()
     total_excused = AttendanceRecord.query.filter_by(
-        student_id=student_db_id, status="excused"
+        student_db_id=student_db_id, status="excused"
     ).count()
-    total_records = AttendanceRecord.query.filter_by(student_id=student_db_id).count()
+    total_records = AttendanceRecord.query.filter_by(student_db_id=student_db_id).count()
 
     # Attendance percentage
     attendance_pct = round(
@@ -146,7 +146,7 @@ def student_stats(student_db_id):
     # Average confidence
     avg_conf = (
         db.session.query(func.avg(AttendanceRecord.confidence_score))
-        .filter_by(student_id=student_db_id)
+        .filter_by(student_db_id=student_db_id)
         .scalar()
     )
 
@@ -155,7 +155,7 @@ def student_stats(student_db_id):
     recent = (
         AttendanceRecord.query
         .filter(
-            AttendanceRecord.student_id == student_db_id,
+            AttendanceRecord.student_db_id == student_db_id,
             AttendanceRecord.date >= week_ago,
         )
         .order_by(AttendanceRecord.date.desc())
@@ -165,13 +165,13 @@ def student_stats(student_db_id):
     # First and last attendance dates
     first_record = (
         AttendanceRecord.query
-        .filter_by(student_id=student_db_id)
+        .filter_by(student_db_id=student_db_id)
         .order_by(AttendanceRecord.date.asc())
         .first()
     )
     last_record = (
         AttendanceRecord.query
-        .filter_by(student_id=student_db_id)
+        .filter_by(student_db_id=student_db_id)
         .order_by(AttendanceRecord.date.desc())
         .first()
     )
@@ -211,7 +211,7 @@ def top_attendees():
             Student.department,
             func.count(AttendanceRecord.id).label("attendance_count"),
         )
-        .join(AttendanceRecord, AttendanceRecord.student_id == Student.id)
+        .join(AttendanceRecord, AttendanceRecord.student_db_id == Student.id)
         .filter(AttendanceRecord.status.in_(["present", "late"]))
     )
 
